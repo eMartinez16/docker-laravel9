@@ -1,0 +1,55 @@
+#Primero especificamos la versión del archivo docker-compose a utilizar, cada versión tiene su propio formato
+version: "3.8"
+
+services:
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx
+    ports:
+      - 8000:80
+    volumes:
+      - .:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf      
+    depends_on:
+      - app
+      - mysql
+    networks:
+      - networkapp
+
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: name_database
+      MYSQL_USER: db_user
+      MYSQL_PASSWORD: db_password
+      MYSQL_ROOT_PASSWORD: db_root_password
+    ports:
+      - 33069:3306
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - networkapp
+
+  app:
+    build:
+      args:
+        user: laraveluser
+        uid: 1000
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: app
+    working_dir: /var/www/html/base-laravel9
+    volumes:
+      - .:/var/www/html
+    networks:
+      - networkapp
+
+networks: 
+  networkapp:  
+
+volumes:
+  dbdata: 
+    driver: local 
+
